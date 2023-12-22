@@ -11,10 +11,10 @@ The dataset used for this project is sourced from https://www.kaggle.com/dataset
 
 The predictive model is built using r and mlr3 The steps involved in the modeling process are as follows:
 
-1. Data preprocessing: Cleaning, encoding categorical variables, handling missing values.
+1. Data preprocessing: Cleaning, encoding categorical variables.
 2. Feature selection: Identifying significant features impacting salary predictions.
 3. Model selection: Trying various algorithms like linear regression, random forest, etc.
-4. Model evaluation: Assessing model performance using metrics like RMSE, MAE, etc.
+4. Model evaluation: Assessing model performance using metrics like RMSE etc.
 
 
 ### Installation
