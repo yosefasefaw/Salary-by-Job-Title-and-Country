@@ -1,1 +1,1 @@
-# Salary-by-Job-Title-and-Country
+# Salary predictions (Group 3)
