@@ -1,0 +1,531 @@
+---
+title: "Job and Salary"
+author: "Yosef Asefaw, Maryxel Ramirez Ugalde, Samu Barnabas Elinger"
+date: '2023-11-13'
+output:
+  word_document: default
+---
+
+```{r}
+knitr::opts_chunk$set(output = FALSE, echo = TRUE, results = 'hide')
+```
+
+**Salary by Job Title and Country**
+
+The primary goal of this project it to apply supervised machine learning models to a real life data and through the process optimize the outcome.
+
+The dataset that we used in this project is "Salary by Job Title and Country" from kaggle.com. "This dataset provides a comprehensive collection of salary information from various industries and regions across the globe. Sourced from reputable employment websites and surveys, it includes details on job titles, salaries, job sectors, geographic locations, and more." (Source:https://www.kaggle.com/datasets/amirmahdiabbootalebi/salary-by-job-title-and-country/data)
+
+As Master students we were interested in analyzing this dataset to find interesting patterns in the labor market and gain insights about job trends and what factors could potentially maximize our earnings in the future.
+
+1) EDA (Exploratory Data Analysis)
+
+The goal of EDA is to understand the main characteristics of our dataset, uncover underlying patterns, detect anomalies, and identify relationships between variables. This gives us the relevant information for data cleaning and preprocessing. Therefore, after importing the dataset we make an extensive EDA that will help us in later stages of the project.
+
+1.1) Import the necessary libraries and load the dataset
+
+```{r}
+#In this project we will use the following packages:
+#install.packages("mlr3extralearners")
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(forcats))
+suppressPackageStartupMessages(library(cowplot))
+suppressPackageStartupMessages(library(fastDummies))
+suppressPackageStartupMessages(library(corrplot))
+suppressPackageStartupMessages(library(paradox))
+suppressPackageStartupMessages(library(parallel))
+suppressPackageStartupMessages(library(future))
+suppressPackageStartupMessages(library(mlr3))
+suppressPackageStartupMessages(library(mlr3pipelines))
+suppressPackageStartupMessages(library(rpart.plot))
+suppressPackageStartupMessages(library(mlr3learners))
+suppressPackageStartupMessages(library(rpart.plot))
+suppressPackageStartupMessages(library(mlr3tuning))
+suppressPackageStartupMessages(library(mlr3viz))
+suppressPackageStartupMessages(library(iml))
+suppressPackageStartupMessages(library(rpart.plot))
+suppressPackageStartupMessages(library(readr))
+suppressPackageStartupMessages(library(treemap))
+suppressPackageStartupMessages(library(mlr3extralearners))
+suppressPackageStartupMessages(library(glmnet))
+
+#Import the data
+u_js_data <- as.data.frame(read_csv('salary.csv',show_col_types = FALSE))
+
+```
+
+1.2) Nature of the dataset
+
+```{r}
+#**Visualize our dataset**
+#First step in our process was to get familiar with the dataset:
+#Retrieve the dimensions of the dataset
+dim(u_js_data)
+#Visualize a sample of our data set with just 5 rows
+head(u_js_data,5)
+#Get a summary of statistical measures for each variable in the data frame. 
+#We have different measures depending on the type of object.
+summary(u_js_data)
+#Get a summary of the names, type and structure of each variable
+str(u_js_data)
+```
+
+1.3) Missing Values
+
+```{r}
+#Know the total of missing value in the entire dataset.
+sum(is.na(u_js_data))
+
+#There was none as the dataset is cleaned and preprocessed for ease of analysis.
+```
+
+1.4) Visualization of Each Variable distribution
+
+1.4.1) Age
+
+```{r}
+#Visualizing Age distribution with an Histogram
+age_u_hist = ggplot(u_js_data, aes(x=Age)) + 
+  geom_histogram(fill="#87CEFA", colour ="#030303", bins = 5) + 
+  labs(title="Age Distribution with Bin = 5") +
+  theme_classic() + 
+  ylab("Frequency")+
+  xlab("Age")
+age_u_hist
+
+#We see that the most common age in this dataset is around 30 years old.
+```
+
+1.4.2) Gender 
+
+```{r}
+#Visualizing Gender distribution with a Barchart
+gender_counts <- table(u_js_data$Gender)
+# Convert the table to a data frame for plotting
+gender_df <- data.frame(Gender = names(gender_counts), Count = as.vector(gender_counts))
+# Create the bar chart
+gender_bar <- ggplot(gender_df, aes(x = Gender, y = Count, fill = Gender)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_text(aes(label = Count), vjust = -0.5, size = 3, color = "black", position = position_dodge(width = 0.7)) +
+  ylim(c(0, max(gender_df$Count) * 1.1)) +  # Adjust ylim for better visualization
+  scale_fill_manual(values = c("Female" = "#F08080", "Male" = "#90EE90")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
+  labs(title = "Gender Distribution", x = "Gender", y = "Count")
+gender_bar
+
+#Gender variable has 658 more Male observations than Female.
+```
+
+1.4.3) Educational Level
+
+```{r}
+#Visualizing Educational level distribution with a Barchart
+edl_counts <- table(u_js_data$`Education Level`)
+# Convert the table to a data frame for plotting
+edl_df <- data.frame(level = names(edl_counts), Count = as.vector(edl_counts))
+# Create the bar chart
+ed_bar <- ggplot(edl_df, aes(x = level, y = Count, fill = level)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  geom_text(aes(label = Count), vjust = -0.5, size = 3, color = "black") +
+  ylim(c(0, max(edl_df$Count) * 1.1)) +  # Adjust ylim for better visualization
+  scale_fill_manual(values = rep("orange", nrow(edl_df))) +  # Set color for bars
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
+  labs(title = "Education Level Distribution", x = "Level of Education", y = "Frequency")
+ed_bar
+
+#The meaning of the values in this variable are the following:
+# 0 : High School
+# 1 : Bachelor Degree
+# 2 : Master Degree
+# 3 : Phd
+```
+
+1.4.4) Job Titles
+
+```{r}
+#Since "job title" was the most diverse variable we visualized the 20 most frequent job titles in the dataset using a treemap and a horizontal bar chart 
+#Isolate the top 20
+jt_counts <- table(u_js_data$`Job Title`)
+jt_df <- data.frame(job_titles = names(jt_counts),Count = as.vector(jt_counts))
+jt_df <- jt_df[order(-jt_df$Count), ]
+top_20 <- jt_df[1:20, ]
+#Display of the Treemap to represent this categorical variable in nested rectangles.
+treemap(top_20, index= "job_titles", vSize="Count",type="index")
+#Create the horizontal bar chart with text labels for better visualization, and using as a base the previous data frame.
+jt_plot <- ggplot(top_20, aes(x=job_titles, y=Count)) + 
+  geom_bar(stat="identity", fill="olivedrab3", alpha=.6, width=.4) + 
+  coord_flip() + 
+  xlab("Job Title") + 
+  theme_bw() + 
+  ylab("Frequency") + 
+  geom_text(aes(label = sprintf("%.2f", (Count / sum(Count)))) ,vjust = +0.5 ,hjust= -0.5, colour = "Black") +
+  ylim(c(0, 2000))
+jt_plot
+#Top 20 job titles in proportion to the total number of jobs.
+prop_of_duplicates<-round((sum(top_20$Count) / sum(jt_df$Count)*100), 2)
+cat(paste(prop_of_duplicates, "%\n"))
+
+#The most common occupations in the dataset are: Software engineer, Data scientist, Data analyst and Software engineer manager
+```
+
+1.4.5) Years of Experience
+
+```{r}
+#Visualizing Years of experience distribution with a histogram
+xp_histogram = ggplot(u_js_data, aes(x = `Years of Experience`)) +
+  geom_histogram(binwidth = 1, fill = "#69b3a2", color = "#030303", alpha = 0.8) +
+  ylab("Frequency") + 
+  xlab("Years of Experience") +
+  theme_classic()
+xp_histogram
+
+#The number of less experienced is higher than the ones with more experience, positively skewed.
+```
+
+1.4.6) Salary (Dependent Variable)
+
+```{r}
+library(scales)
+#Visualizing Salary distribution with a histogram
+Salary_hist = ggplot(u_js_data, aes(x = Salary)) +
+  geom_histogram(binwidth = 10000, fill = "#FFA54F", color = "#030303") +
+  theme_classic() +
+  ylab("Frequency") + 
+  xlab("Salary") +
+  scale_x_continuous(labels = comma)
+Salary_hist
+
+#The histogram shows that most of the values are distributed in the center and extremes values are less common.
+#Statistical summary 
+summary(u_js_data$Salary)
+
+#The range of salary in the dataset is between 350 and 250 000, with a mean of 115 307 and a median of 115 000.
+#The min. values (e.g., 350) will have to be examined in further detail as potential outliers.
+```
+
+1.4.7) Country
+
+```{r}
+#Visualizing the Country frequency distribution with a horizontal bar plot, which shows an even distribution. 
+countries_counts <- table(u_js_data$Country)
+countries_df <- data.frame(Country = names(countries_counts),Count = as.vector(countries_counts))
+countries_plots<-ggplot(countries_df, aes(x=Country, y=Count)) + 
+  geom_bar(stat="identity", fill="#f68060", alpha=.6, width=.4) + 
+  geom_text(aes(label = Count), size = 5, color = "black") + 
+  coord_flip() + 
+  xlab("Countries") + 
+  theme_bw() + 
+  ylab("Frequency")
+countries_plots
+
+#The observations under the variable "Country" are almost equally distributed. 
+```
+
+1.4.8) Race
+
+```{r}
+#Visualizing The Race  distribution with a horizontal bar plot 
+race_counts <- table(u_js_data$Race)
+race_df <- data.frame(Race = names(race_counts),Count = as.vector(race_counts))
+race_plot <- ggplot(race_df, aes(x=Race, y=Count)) + 
+  geom_bar(stat="identity", fill="#97FFFF", alpha=.6, width=.4) + 
+  coord_flip() + 
+  xlab("Race") + 
+  theme_bw() + 
+  ylab("Frequency") + 
+  geom_text(aes(label = sprintf("%.2f", (Count / sum(Count)))) ,vjust = + 0.5, colour = "Black") + 
+  ylim(c(0, 2000))
+race_plot
+
+#We see a predominance of "White" employees, followed by "Asians". These two race types together account for more than half of the dataset.
+#We believe that the distribution of the variable race corresponds to the ethnic distribution in the countries from which the dataset was compiled.
+```
+
+1.4.9) Seniority
+
+```{r}
+#Visualizing The seniority distribution with a histogram
+#Since this a variable where most of the observations are on the "Not Senior" category we have to consider if its elimination might be better for the analysis.
+senior_counts <- table(u_js_data$Senior)
+senior_df <- data.frame(Senior = names(senior_counts), Count = as.vector(senior_counts))
+senior_hist = ggplot(senior_df, aes(x=factor(Senior), y=Count, fill= factor(Senior))) + 
+    geom_col() +  
+  scale_fill_manual(values = c("0" = "#1E90FF", "1" = "#FFD700")) + 
+  labs(fill = "Seniority") +
+  scale_x_discrete(labels = c("0" = "Not Senior", "1" = "Senior")) +
+  theme_classic() + 
+  ylab("Frequency") +
+  guides(fill = FALSE)
+senior_hist
+
+#The distribution and underlying meaning of the variable Seniority gives justification for removal of the variable.
+```
+
+1.5) Investigate correlation between variables
+
+1.5.1) Correlation matrix
+
+```{r}
+#Correlation matrix of only numeric variables 
+df1<-u_js_data
+numeric_df <- df1[sapply(df1, is.numeric)]
+correlation_matrix <- cor(numeric_df)
+corrplot(correlation_matrix, method = "color")
+#Correlation matrix of encoded categorical variable (except for "job title", because there are many unique values for this variable to be visualized in a correlation matrix)
+df2 <- df1
+df2 <- dummy_cols(df2, select_columns = c("Gender", "Education Level", "Country", "Race"))
+columns_to_drop <- c("Gender", "Education Level", "Country", "Race")
+df2 <- df2[, -which(names(df2) %in% columns_to_drop)]
+numeric_df <- df2[sapply(df2, is.numeric)]
+correlation_matrix <- cor(numeric_df)
+corrplot(correlation_matrix, method = "color")
+
+#We plotted the correlation matrix to improve model interpretation and address potential collinearity. 
+#It is used to understand the relationships between variables in a dataset. It shows how strongly pairs of variables are related to each other. The current high observed multicollinearity may pose problems for linear models, but not for random forest.
+```
+
+1.6) Visualization Strong Correlation 
+
+1.6.1) Salary and Years of Experience
+
+```{r}
+#visualize Years of Experience to Salary by creating a new data frame with only these two variables
+s_yrs_df <- u_js_data[, c("Salary", "Years of Experience")]
+breaks <- c(0, 5, 10, 15, 20, 25, Inf)
+# Create labels for the bins
+labels <- c("0-5", "6-10", "11-15", "16-20", "21-25", "25+")
+# Use cut() to create the bins
+s_yrs_df$`Years of Experience` <- cut(s_yrs_df$`Years of Experience`, breaks = breaks, labels = labels, include.lowest = TRUE)
+#Visualize Yrs of experience categories in comparison to Salary
+ggplot(s_yrs_df,aes(x=as.factor(`Years of Experience`), y=Salary, fill= as.factor(`Years of Experience`))) + 
+  geom_boxplot() + 
+  xlab("Years of Experience") + 
+  theme(legend.position = "none")
+
+#The plot aligns with our initial expectations that a higher experience corresponds to a higher salary.
+```
+
+1.6.2) Salary and Seniority
+
+```{r}
+#Visualize Seniority to Salary, similar to 1.7.1
+s_senior_df <- u_js_data[, c("Salary", "Senior")]
+ggplot(s_senior_df, aes(x = factor(Senior), y = Salary, fill = factor(Senior))) + 
+  geom_boxplot() + 
+  xlab("Seniority") +
+  scale_fill_manual(values = c("0" = "#1E90FF", "1" = "#FFD700"), name = "Seniority") +
+  scale_x_discrete(labels = c("0" = "Not Senior", "1" = "Senior")) +
+  theme_classic() +
+  ylab("Salary") +
+  guides(fill = FALSE)
+
+#The plot aligns with our initial expectations that senior roles are more likely to earn more.
+```
+
+1.6.3) Salary and Gender
+
+```{r}
+#Visualize Gender to Salary 
+s_gender_df <- u_js_data[, c("Salary", "Gender")]
+ggplot(s_gender_df,aes(x=as.factor(Gender), y=Salary, fill = as.factor(Gender))) + 
+  geom_boxplot() + 
+  xlab("Gender") + 
+  theme(legend.position = "none") 
+
+#The plot shows that on average males earn more than females, but it might be valuable to examine the relationship between gender and years of experience in the dataset as that might account for the difference in salary.
+```
+
+1.6.4) Gender and Years of Experience
+
+```{r}
+#Visualize Gender to Years of Experience
+Gender_Yrs_df <- u_js_data[, c("Gender", "Years of Experience")]
+# Create the boxplot with male and female side by side
+ggplot(Gender_Yrs_df, aes(x = Gender, y = `Years of Experience`, fill = Gender)) + 
+  geom_boxplot(position = "dodge") + 
+  xlab("Gender") + 
+  ylab("Years of Experience") + 
+  theme_minimal() +
+  guides(fill = "none")
+
+#Our previous assumption was correct, that on average males earn more, but on average they also have more experience.
+```
+
+1.6.5) Salary and Race
+
+```{r}
+#Visualize Race to Salary 
+Race_Salary_df <- u_js_data[, c("Race", "Salary")]
+ggplot(Race_Salary_df,aes(x=as.factor(Race), y=Salary, fill= as.factor(Race))) + 
+  geom_boxplot() + 
+  xlab("Race") +
+  theme(legend.position = "none")
+
+#The salaries based on race are relatively evenly spread out.
+```
+
+2) Data Cleaning / Preprocessing
+
+2.1) Outliers
+
+```{r}
+#Identify potential outliers using the Interquartile Range method
+Q1 <- quantile(u_js_data$Salary, 0.25)
+Q3 <- quantile(u_js_data$Salary, 0.75)
+IQR <- Q3 - Q1
+#We choose a multiplier of 0.75. The smaller multiplier makes the bounds tighter and flags more values as potential outliers.
+lower_bound <- Q1 - 0.75 * IQR
+upper_bound <- Q3 + 0.75 * IQR
+potential_outliers <- u_js_data$Salary < lower_bound | u_js_data$Salary > upper_bound
+#Identify which rows contain the potential outliers
+outlier_rows <- u_js_data[potential_outliers, ]
+print(outlier_rows)
+#The outliers below 1000 seem to be clear errors in the dataset, thus we remove them up front to improve the accuracy of the analysis.
+u_js_data_cleaned <- subset(u_js_data, u_js_data$Salary >= 1000)
+u_js_data_cleaned
+```
+
+2.2) Scaling the dependent variable
+
+
+
+2.3) Encoding
+
+```{r}
+#Select categorical columns that need to be encoded
+df <- dummy_cols(u_js_data_cleaned, select_columns = c("Gender", "Education Level", "Job Title", "Country", "Race"))
+#Drop the categorical columns that have been encoded
+columns_to_drop <- c("Gender", "Education Level", "Job Title", "Country", "Race")
+df <- df[, -which(names(df) %in% columns_to_drop)]
+#Print the encoded dataset
+df
+```
+2.4) Replacing spaces in column names with underscores
+
+```{r}
+colnames(df) <- gsub(" ", "_", colnames(df))
+colnames(df)
+```
+
+3) Modelling
+
+3.1) Setting up hardware specifications for modelling
+
+```{r}
+detectCores()
+cores = detectCores() - 1
+```
+
+3.2) Random forest model
+
+```{r}
+#We begin with random forest because of the number of variables we have.
+rf = lrn("regr.randomForest")
+rf$param_set
+
+#Regression
+df_reg <- TaskRegr$new(
+  id = "salary_prediction",  # Task ID
+  backend = df,              # Dataset
+  target = "Salary"          # Target variable
+)
+
+#Configuration of hyperparameters
+rf_ps = ParamSet$new(list(
+  ParamInt$new("mtry", lower = 12, upper = 50),
+  ParamInt$new("min.node.size", lower = 1, upper = 50)
+))
+
+#Model tuning process
+res_inner = rsmp("cv", folds = 4)
+mes_inner = msr("regr.rmse")  # Use a regression measure like mean squared error (mse)
+terminator = trm("evals", n_evals = 100) # ends the loop 
+tuner = tnr("random_search") 
+
+rf_at_reg <- AutoTuner$new(
+  learner = rf,  
+  resampling = res_inner,
+  measure = mes_inner,
+  search_space = rf_ps,
+  terminator = terminator,
+  tuner = tuner
+)
+
+res_outer = rsmp("cv", folds = 5)
+
+plan("multisession", workers = cores)
+
+set.seed(2, kind = "L'Ecuyer-CMRG")
+
+nested_res = resample(
+  task = df_reg,
+  learner = rf,
+  resampling = res_outer
+)
+
+plan("sequential")
+
+nested_res$aggregate()
+autoplot(nested_res)
+```
+
+3.3) Benchmarking
+
+```{r, results='hide'}
+#We need to have a baseline model to compare the performance of our model
+#The baseline model always predicts the mean of the dependent variable
+#We have also added a linear regression and a lasso regression
+baseline = lrn("regr.featureless")
+rf = lrn("regr.randomForest")
+lasso = lrn("regr.cv_glmnet", alpha = 1)
+mvlm <- lrn("regr.lm")
+learners_list <- list(baseline, rf, mvlm, lasso)
+
+#Warning message arises due to the high multicollinearity in the data which can lead to issues with the model's ability to distinguish between the variables individual effects.
+
+design_class =  benchmark_grid(
+  tasks = df_reg,
+  learners = learners_list,
+  resamplings = rsmp("cv", folds = 3)
+)
+
+plan("multisession", workers = cores)
+
+bm_class = benchmark(design_class)
+
+plan("sequential")
+
+regression_metrics <- msrs(c("regr.mse", "regr.rmse"))
+
+bmr_class = bm_class$aggregate(regression_metrics)
+bmr_class[, c(8)]
+
+mlr3viz::autoplot(bm_class, measure = msr("regr.rmse"))
+
+```
+
+3.4) Calculating feature importance
+
+```{r, results='hide'}
+rf$train(df_reg)
+
+y = df$Salary
+x = df[-which(names(df) == "Salary")]
+
+mod = Predictor$new(rf, data = x, y = y)
+
+# Computing feature importance using permutation method for regression loss
+suppressWarnings(importance <- FeatureImp$new(mod, loss = "mse", n.repetitions = 2))
+
+# Plotting feature importance
+importance$plot()
+importance
+
+```
+
+4) Findings & Implications
+
+Our primary aim was to uncover significant patterns in the labor market, gaining valuable insights into job trends and potential strategies for maximizing future earnings. Among the models evaluated, the Random Forest model demonstrated superior performance based on both MSE and RMSE, followed by the Linear Regression model and Lasso Regression, with the dummy model significantly trailing behind. The linear model suffered from a rank deficient fit due to the high multicollinearity in the data. Using the Random Forest feature importance our study highlights that years of experience emerged as the most influential predictor of salary, followed by age. Job type also wielded substantial influence, with software engineers commanding the highest salaries, followed by data analysts and data scientists. Holding a Ph.D. also proved to be a significant factor in salary determination. Intriguingly, a master's degree appeared to carry less weight than a bachelor's degree or even a high school diploma. Nevertheless, it's also important to acknowledge limitations. The generalizability of our results is confined at most to the countries included in the dataset. Additionally, due to the relatively limited size of the dataset, it could be exposed to biases (e.g., sampling bias) that should be considered when interpreting the results. Despite these limitations, we hope that our findings offer valuable insights, aiding in informed decision-making when considering career choices based on expected salary.
