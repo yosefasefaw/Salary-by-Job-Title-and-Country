@@ -1,0 +1,49 @@
+R version 4.3.1 (2023-06-16 ucrt)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 11 x64 (build 22621)
+
+Matrix products: default
+
+
+Random number generation:
+ RNG:     L'Ecuyer-CMRG 
+ Normal:  Inversion 
+ Sample:  Rejection 
+ 
+locale:
+[1] LC_COLLATE=English_Switzerland.utf8  LC_CTYPE=English_Switzerland.utf8    LC_MONETARY=English_Switzerland.utf8
+[4] LC_NUMERIC=C                         LC_TIME=English_Switzerland.utf8    
+
+time zone: Europe/Zurich
+tzcode source: internal
+
+attached base packages:
+ [1] stats4    splines   grid      tools     compiler  parallel  stats     graphics  grDevices utils     datasets  methods  
+[13] base     
+
+other attached packages:
+  [1] mlr3measures_0.5.0      rlang_1.1.1             crayon_1.5.2            purrr_1.0.2             prodlim_2023.08.28     
+  [6] ipred_0.9-14            listenv_0.9.0           gower_1.0.1             ellipsis_0.3.2          globals_0.16.2         
+ [11] Rcpp_1.0.11             munsell_0.5.0           xtable_1.8-4            cli_3.6.1               tibble_3.2.1           
+ [16] codetools_0.2-19        evaluate_0.22           yaml_2.3.7              stringi_1.7.12          timeDate_4022.108      
+ [21] hardhat_1.3.0           xfun_0.40               gridExtra_2.3           knitr_1.44              tidyselect_1.2.0       
+ [26] survival_3.5-5          bbotk_0.7.2             later_1.3.1             vroom_1.6.4             stringr_1.5.0          
+ [31] pillar_1.9.0            foreach_1.5.2           utf8_1.2.3              car_3.1-2               hms_1.1.3              
+ [36] data.table_1.14.8       tidyr_1.3.0             class_7.3-22            tzdb_0.4.0              gtable_0.3.4           
+ [41] recipes_1.0.8           generics_0.1.3          reshape2_1.4.4          gridBase_0.4-7          checkmate_2.3.0        
+ [46] promises_1.2.1          nlme_3.1-162            treemapify_2.5.6        lgr_0.4.4               Metrics_0.1.4          
+ [51] glue_1.6.2              nnet_7.3-19             future.apply_1.11.0     httpuv_1.6.12           ranger_0.15.1          
+ [56] ModelMetrics_1.2.2.2    lava_1.7.3              MASS_7.3-60             ggsignif_0.6.4          prediction_0.3.14      
+ [61] carData_3.0-5           viridis_0.6.4           viridisLite_0.4.2       backports_1.4.1         withr_2.5.1            
+ [66] bit64_4.0.5             bit_4.0.5               abind_1.4-5             timechange_0.2.0        fansi_1.0.4            
+ [71] randomForest_4.7-1.1    labeling_0.4.3          ggpubr_0.6.0            mlr3misc_0.13.0         colorspace_2.1-0       
+ [76] digest_0.6.33           shiny_1.7.5.1           fastmap_1.1.1           R6_2.5.1                pkgconfig_2.0.3        
+ [81] iterators_1.0.14        lifecycle_1.0.3         mime_0.12               igraph_1.5.1            ggfittext_0.10.1       
+ [86] uuid_1.1-1              lubridate_1.9.3         palmerpenguins_0.1.1    plyr_1.8.9              parallelly_1.36.0      
+ [91] pROC_1.18.5             broom_1.0.5             htmltools_0.5.6.1       rstatix_0.7.2           vctrs_0.6.3            
+ [96] rmarkdown_2.25          farver_2.1.1            magrittr_2.0.3          rstudioapi_0.15.0       shape_1.4.6            
+[101] RColorBrewer_1.1-3      scales_1.2.1            glmnet_4.1-8            Matrix_1.6-2            caret_6.0-94           
+[106] lattice_0.21-8          mlr3extralearners_0.7.1 treemap_2.4-4           readr_2.1.4             iml_0.11.1             
+[111] mlr3viz_0.6.1           mlr3tuning_0.19.0       mlr3learners_0.5.6      rpart.plot_3.1.1        rpart_4.1.19           
+[116] mlr3pipelines_0.5.0-1   mlr3_0.16.1             future_1.33.0           paradox_0.11.1          corrplot_0.92          
+[121] fastDummies_1.7.3       cowplot_1.1.1           forcats_1.0.0           dplyr_1.1.3             ggplot2_3.4.3          
