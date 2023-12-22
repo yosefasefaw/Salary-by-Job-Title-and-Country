@@ -388,11 +388,7 @@ u_js_data_cleaned <- subset(u_js_data, u_js_data$Salary >= 1000)
 u_js_data_cleaned
 ```
 
-2.2) Scaling the dependent variable
-
-
-
-2.3) Encoding
+2.2) Encoding
 
 ```{r}
 #Select categorical columns that need to be encoded
@@ -403,7 +399,7 @@ df <- df[, -which(names(df) %in% columns_to_drop)]
 #Print the encoded dataset
 df
 ```
-2.4) Replacing spaces in column names with underscores
+2.3) Replacing spaces in column names with underscores
 
 ```{r}
 colnames(df) <- gsub(" ", "_", colnames(df))
